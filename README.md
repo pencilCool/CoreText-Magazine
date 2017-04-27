@@ -10,12 +10,12 @@ update to ARC
   
  	CGContextRef context = UIGraphicsGetCurrentContext();
   
-####修剪画板：
+### 修剪画板：
 
 	 CGMutablePathRef path = CGPathCreateMutable();
  	 CGPathAddRect(path, NULL, self.bounds );
     
-####调好画笔的颜色：
+### 调好画笔的颜色：
 
 ```
   	CTFramesetterRef framesetter = 
@@ -23,7 +23,7 @@ update to ARC
   	
 ```
         
-###找到画板的区域位置
+### 找到画板的区域位置
 ```
  CTFrameRef frame =
 	        CTFramesetterCreateFrame(framesetter,
@@ -31,18 +31,18 @@ update to ARC
 ```
    
             
-####开始画：
+### 开始画：
 
 ```
   CTFrameDraw(frame, context);  
 ```
 
-###清理裁剪工具， 画笔，和作画区域
+### 清理裁剪工具， 画笔，和作画区域
 - CFRelease(frame); 
 - CFRelease(path);
 - CFRelease(framesetter);
     
-## 基本用法：
+### 基本用法：
 ```
     作画分很多个区域来完成：
     while (textPos < [attString length]) { // 从头到尾画完
@@ -53,7 +53,7 @@ update to ARC
     ... 
     }
 ```  
-## 复杂一点的加点图片
+### 复杂一点的加点图片
     
     
     
