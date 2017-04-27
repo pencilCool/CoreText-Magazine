@@ -88,40 +88,40 @@
 -(void)attachImagesWithFrame:(CTFrameRef)f inColumnView:(CTColumnView*)col
 {
     //drawing images
-    NSArray *lines = (NSArray *)CTFrameGetLines(f); //1
+    NSArray *lines = (NSArray *)CTFrameGetLines(f); //1 获得这一帧率中的行数
     
     CGPoint origins[[lines count]];
-    CTFrameGetLineOrigins(f, CFRangeMake(0, 0), origins); //2
+    CTFrameGetLineOrigins(f, CFRangeMake(0, 0), origins); //2 获得这一帧中，最上面的一行的起点位置
     
-    int imgIndex = 0; //3
+    int imgIndex = 0; //3  获取图片和 图片的位置信息   ，图片会被一张一张安置。imageIndex = 0 以为这当前被安置的个数为 0。
     NSDictionary* nextImage = [self.images objectAtIndex:imgIndex];
     int imgLocation = [[nextImage objectForKey:@"location"] intValue];
     
     //find images for the current column
-    CFRange frameRange = CTFrameGetVisibleStringRange(f); //4
-    while ( imgLocation < frameRange.location ) {
+    CFRange frameRange = CTFrameGetVisibleStringRange(f); //4 获取当前帧中能看到的可见 字符的范围。
+    while ( imgLocation < frameRange.location ) {   //在文字被显示的范围里面找，看图片是不是在这个范围里面出现了。
         imgIndex++;
         if (imgIndex>=[self.images count]) return; //quit if no images for this column
         nextImage = [self.images objectAtIndex:imgIndex];
-        imgLocation = [[nextImage objectForKey:@"location"] intValue];
+        imgLocation = [[nextImage objectForKey:@"location"] intValue];// 遍历的是图片的位置，而不是当前显示的文字的位置。
     }
     
     NSUInteger lineIndex = 0;
-    for (id lineObj in lines) { //5
+    for (id lineObj in lines) { //5   一帧 中， 一行一行的来处理。
         CTLineRef line = (__bridge CTLineRef)lineObj;
         
         for (id runObj in (NSArray *)CTLineGetGlyphRuns(line)) { //6
             CTRunRef run = (__bridge CTRunRef)runObj;
             CFRange runRange = CTRunGetStringRange(run);
             
-            if ( runRange.location <= imgLocation && runRange.location+runRange.length > imgLocation ) { //7
+            if ( runRange.location <= imgLocation && runRange.location+runRange.length > imgLocation ) { //7  看看图片插入的位置是不是在扎个run 中间。
 	            CGRect runBounds;
 	            CGFloat ascent;//height above the baseline
 	            CGFloat descent;//height below the baseline
-	            runBounds.size.width = CTRunGetTypographicBounds(run, CFRangeMake(0, 0), &ascent, &descent, NULL); //8
+	            runBounds.size.width = CTRunGetTypographicBounds(run, CFRangeMake(0, 0), &ascent, &descent, NULL); //8 获取run 的宽和高
 	            runBounds.size.height = ascent + descent;
                 
-	            CGFloat xOffset = CTLineGetOffsetForStringIndex(line, CTRunGetStringRange(run).location, NULL); //9
+	            CGFloat xOffset = CTLineGetOffsetForStringIndex(line, CTRunGetStringRange(run).location, NULL); //9 获取run的原点
 	            runBounds.origin.x = origins[lineIndex].x + self.frame.origin.x + xOffset + frameXOffset;
 	            runBounds.origin.y = origins[lineIndex].y + self.frame.origin.y + frameYOffset;
 	            runBounds.origin.y -= descent;
@@ -130,6 +130,8 @@
                 CGPathRef pathRef = CTFrameGetPath(f); //10
                 CGRect colRect = CGPathGetBoundingBox(pathRef);
                 
+                // 根据 run 的原点 和尺寸 和图片的尺寸 ，确定 图片的frame 。我比较好奇的是，新的frame 会不会导致图片超出屏幕尺寸？
+                // 其实应该是不会的，colRect.origin 是这一帧中左上角的点。
                 CGRect imgBounds = CGRectOffset(runBounds, colRect.origin.x - frameXOffset - self.contentOffset.x, colRect.origin.y - frameYOffset - self.frame.origin.y);
                 [col.images addObject: //11
                  [NSArray arrayWithObjects:img, NSStringFromCGRect(imgBounds) , nil]
